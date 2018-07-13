@@ -3,9 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class MainPage extends StatelessWidget {
+  var cameras;
+  MainPage(this.cameras);
   void _signOut() {
     FirebaseAuth.instance.signOut();
-    print('User Signed Out');
   }
 
   @override
@@ -18,6 +19,16 @@ class MainPage extends StatelessWidget {
         ),
         centerTitle: true,
         backgroundColor: Colors.blueAccent,
+        actions: <Widget>[
+          new IconButton(
+            icon: new Icon(Icons.camera_alt, size: 28.0,),
+            padding: EdgeInsets.only(right: 30.0),
+            color: Colors.white,
+            onPressed: () {
+              Navigator.pushNamed(context, '/Camera');
+            },
+          )
+        ],
       ),
       backgroundColor: Colors.blue.shade400,
       body: new Container(
@@ -31,12 +42,18 @@ class MainPage extends StatelessWidget {
                   future: FirebaseAuth.instance.currentUser(),
                   builder: (BuildContext context,
                       AsyncSnapshot<FirebaseUser> snapshot) {
-                    return Container(
-                        width: 200.0,
-                        height: 200.0,
-                        child: new Image.network(
-                          snapshot.data.photoUrl,
-                        ));
+                    return snapshot.data.photoUrl != null
+                        ? Container(
+                            width: 200.0,
+                            height: 200.0,
+                            child: new Image.network(
+                              snapshot.data.photoUrl,
+                            ))
+                        : Container(
+                            width: 200.0,
+                            height: 200.0,
+                            child: new Icon(Icons.account_circle,
+                                color: Colors.white, size: 200.0));
                   }),
               new Padding(padding: EdgeInsets.all(20.0)),
               new FutureBuilder<FirebaseUser>(
@@ -44,9 +61,11 @@ class MainPage extends StatelessWidget {
                   builder: (BuildContext context,
                       AsyncSnapshot<FirebaseUser> snapshot) {
                     if (snapshot.connectionState == ConnectionState.done) {
-                      return new Text('User: ${snapshot.data.displayName}',
-                          style:
-                              TextStyle(fontSize: 24.0, color: Colors.white));
+                      return snapshot.data.displayName != null
+                          ? new Text('User: ${snapshot.data.displayName}',
+                              style: TextStyle(
+                                  fontSize: 24.0, color: Colors.white))
+                          : new Container();
                     } else {
                       return new Text('Loading......');
                     }
@@ -58,7 +77,6 @@ class MainPage extends StatelessWidget {
                     return new Text('Email: ${snapshot.data.email}',
                         style: TextStyle(fontSize: 24.0, color: Colors.white));
                   }),
-              // new Padding(padding: EdgeInsets.only(top: 200.0)),
               new Expanded(
                   child: new Align(
                       alignment: Alignment.bottomCenter,
@@ -68,7 +86,10 @@ class MainPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
                           new MaterialButton(
-                            onPressed: _signOut,
+                            onPressed: () {
+                              _signOut;
+                              Navigator.pop(context);
+                            },
                             child: new Text('Sign Out',
                                 style: TextStyle(color: Colors.white)),
                             color: Colors.blue.shade800,

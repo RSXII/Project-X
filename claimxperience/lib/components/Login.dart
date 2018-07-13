@@ -12,20 +12,36 @@ class Login extends StatefulWidget {
   }
 }
 
+class _LoginData {
+  String email = '';
+  String password = '';
+}
+
 class LoginState extends State<Login> {
-  // final TextEditingController _userController = new TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = new GoogleSignIn();
+  _LoginData _data = new _LoginData();
+  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
-  Future<FirebaseUser> _signIn() async {
+  Future<FirebaseUser> _signIn(BuildContext context) async {
     GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
     GoogleSignInAuthentication gSA = await googleSignInAccount.authentication;
 
     FirebaseUser user = await _auth.signInWithGoogle(
         idToken: gSA.idToken, accessToken: gSA.accessToken);
+    Navigator.pushNamed(context, '/MainPage');
+    return user;
+  }
 
-    print("User Name : ${user.displayName}");
-    print(user.photoUrl);
+  _signInEmail(BuildContext context) async {
+    _formKey.currentState.save();
+    if(_data.email == '' || _data.password == ''){
+      print('Missing email or password');
+      return null;
+    }
+    FirebaseUser user = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _data.email, password: _data.password);
+    // print(user);
+    Navigator.pushNamed(context, '/MainPage');
     return user;
   }
 
@@ -57,26 +73,82 @@ class LoginState extends State<Login> {
                     width: 190.0,
                     height: 190.0,
                   )),
-              new Padding(
-                padding: new EdgeInsets.all(10.0),
-              ),
               new Container(
-                  height: 160.0,
+                  height: 260.0,
                   width: 380.0,
                   // color: Colors.white70,
                   child: new Column(
                     children: <Widget>[
-                      new Container(
+                      new Theme(
+                        data: new ThemeData(hintColor: Colors.white),
+                        child: Container(
+                            width: 240.0,
+                            child: new Form(
+                              key: this._formKey,
+                              child: Column(
+                                children: <Widget>[
+                                  TextFormField(
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return 'Please enter an email';
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      labelStyle:
+                                          TextStyle(color: Colors.white),
+                                      labelText: 'Enter an email',
+                                    ),
+                                    onSaved: (String value) {
+                                      this._data.email = value;
+                                    },
+                                  ),
+                                  TextFormField(
+                                    obscureText: true,
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return 'Please enter some text';
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      labelStyle:
+                                          TextStyle(color: Colors.white),
+                                      labelText: 'Enter a password',
+                                    ),
+                                    onSaved: (String value) {
+                                      this._data.password = value;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )),
+                      ),
+                      new Padding(padding: EdgeInsets.only(bottom: 15.0)),
+                      Container(
                           height: 50.0,
-                          width: 160.0,
+                          width: 240.0,
                           child: new Column(
                             children: <Widget>[
-                              new RaisedButton(
-                                onPressed: _signOut,
-                                child: new Text('Sign In',
-                                    style: TextStyle(color: Colors.white)),
-                                color: Colors.blue,
-                                splashColor: Colors.grey,
+                              new Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  new RaisedButton(
+                                    onPressed: () async {
+                                      _signInEmail(context);
+                                    },
+                                    child: new Text('Sign In',
+                                        style: TextStyle(color: Colors.white)),
+                                    color: Colors.blue,
+                                    splashColor: Colors.grey,
+                                  ),
+                                  new RaisedButton(
+                                    onPressed: _signOut,
+                                    child: new Text('Register',
+                                        style: TextStyle(color: Colors.white)),
+                                    color: Colors.blue,
+                                    splashColor: Colors.grey,
+                                  ),
+                                ],
                               ),
                             ],
                           )),
@@ -105,16 +177,20 @@ class LoginState extends State<Login> {
                                     top: 6.0, bottom: 6.0, right: 14.0),
                                 elevation: 0.0,
                                 splashColor: Colors.grey,
-                                onPressed: () => _signIn()
-                                    .then((FirebaseUser user) => print(user))
-                                    .catchError((e) => print(e)),
-                              )
+                                onPressed: () =>
+                                    _signIn(context).then((FirebaseUser user) {
+                                      if (user == null) {
+                                        print('result was null');
+                                      }
+                                      print(user);
+                                    }).catchError((e) => print(e)),
+                              ),
                             ],
-                          ))
+                          )),
                     ],
                   )),
               new Expanded(
-                child: new Align(
+                  child: new Align(
                 alignment: Alignment.bottomCenter,
                 child: new Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -123,11 +199,11 @@ class LoginState extends State<Login> {
                   children: <Widget>[
                     new Text(
                       'Powered by ClaimXperience™',
-                      style: new TextStyle(color: Colors.white, fontSize: 18.0),
+                      style: new TextStyle(color: Colors.white, fontSize: 16.0),
                     ),
                     new Text(
                       'a product of Xactware®',
-                      style: new TextStyle(color: Colors.white, fontSize: 18.0),
+                      style: new TextStyle(color: Colors.white, fontSize: 16.0),
                     ),
                     new Padding(
                       padding: new EdgeInsets.only(top: 8.0),

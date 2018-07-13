@@ -1,35 +1,29 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
+import 'package:camera/camera.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:firebase_storage/firebase_storage.dart';
 
 //components
 import './components/Login.dart';
 import './components/MainPage.dart';
 import './components/AccountInfo.dart';
+import './components/CameraPage.dart';
 
-void main(){
+List<CameraDescription> cameras;
+
+Future<Null> main() async{
+  cameras = await availableCameras();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      
   runApp(new MaterialApp(
-    title: "ClaimXprerience",
-    home: _getLandingPage(),
-    routes: <String, WidgetBuilder>{
-      "/SecondPage": (BuildContext context) => new AccountInfo()
-    }
-    ));
+      title: "ClaimXprerience",
+      home: new Login(),
+      routes: <String, WidgetBuilder>{
+        "/MainPage": (BuildContext context) => new MainPage(cameras),
+        "/Camera": (BuildContext context) => new CameraPage(cameras)
+      }));
 }
 
-Widget _getLandingPage() {
-  return StreamBuilder<FirebaseUser>(
-    stream: FirebaseAuth.instance.onAuthStateChanged,
-    builder: (BuildContext context, snapshot) {
-      if (snapshot.hasData) {
-        if (snapshot.data.providerData.length == 1) { // logged in using email and password
-          return MainPage();
-        } else { // logged in using other providers
-          return MainPage();
-        }
-      } else {
-        return Login();
-      }
-    },
-  );
-}

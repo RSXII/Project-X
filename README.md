@@ -1,2 +1,2 @@
 # Project-X
-Flutter Application
+Flutter rebuild of ClaimXperience Video collaboration mobile application.
